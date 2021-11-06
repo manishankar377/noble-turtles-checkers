@@ -3,6 +3,8 @@ import 'bulma/css/bulma.min.css';
 import { Button } from 'react-bulma-components';
 import Rules from "../Rules/Rules";
 import ToPlay from "../ToPlay/ToPlay";
+import Game from "../Game/Game";
+
 
 interface HomeProps {}
 
@@ -10,11 +12,14 @@ interface HomeState {
     
 }
 
+
 export default class Home extends React.Component {
+
         
     state = {
         displayRules : false,
-        displayToplay: false
+        displayToplay: false,
+        startGame : false,
     };
 
     public toggleRules = () => {
@@ -25,8 +30,11 @@ export default class Home extends React.Component {
         this.setState({ displayToplay: !this.state.displayToplay });
     }
 
-    public navigateToGame = () => {
-        alert('navigate to Game');
+    public navigateToGame = (event:any) => {
+        // this.context.router.history.push('/game');
+        this.setState({ displayToplay: !this.state.displayToplay });
+        this.setState({ startGame: !this.state.startGame });
+      
     }
 
     render() {
@@ -44,9 +52,8 @@ export default class Home extends React.Component {
 
             {this.state.displayRules ? ((<Rules toggleRules={this.toggleRules}></Rules>)) : ''}
             {this.state.displayToplay ? ((<ToPlay navigateToGame={this.navigateToGame} toggleToPlay={this.toggleToPlay}></ToPlay>)) : ''}
+            {this.state.startGame ? ((<Game></Game>)) : ''}
             </div>
         )
-    }
-
-    
+    }   
 }

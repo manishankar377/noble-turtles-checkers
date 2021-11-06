@@ -3,21 +3,23 @@ import React from "react";
 import { Redirect, Route} from "react-router-dom";
 import Rules from "./Rules/Rules";
 import Home from "./Home/Home";
+import Game from "./Game/Game"
 import { Button } from 'react-bulma-components';
 
-function App() {
-  return (
-    <div>
-      
-    <switch>
-      <Route path="/home"><Home/></Route>
-      <Route path="/rules">
-        <Rules />
-      </Route>
-      <Redirect from="*" to="/home"></Redirect>
-    </switch>
-    </div>
-  );
-}
+export default class App extends React.Component {
 
-export default App;
+  render() {
+    return (
+      <div>
+        
+      <switch>
+        <Route path="/home"><Home/></Route>
+        <Route path="/game">
+          <Game />
+        </Route>
+        <Redirect from="*" to="/home"></Redirect>
+      </switch>
+      </div>
+    );
+  }
+}
