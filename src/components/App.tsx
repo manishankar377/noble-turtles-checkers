@@ -1,6 +1,6 @@
 import React from "react";
 // import './App.css';
-import { Redirect, Route, Switch, Link } from "react-router-dom";
+import { Redirect, Route} from "react-router-dom";
 import Rules from "./Rules/Rules";
 import Home from "./Home/Home";
 import { Button } from 'react-bulma-components';
