@@ -1,8 +1,7 @@
 
-import React, { Component, CSSProperties } from "react";
+import { Component } from "react";
 import './GameBoard.css';
 import Row from './Row';
-import Cell from './Cell';
 
 
 
