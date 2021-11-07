@@ -1,6 +1,8 @@
 import React, { Component, CSSProperties } from "react";
 import 'bulma/css/bulma.min.css';
 
+import GameBoard from './GameBoard/GameBoard';
+
 
 interface GameProps {
   toggleToPlay?: any;
@@ -44,7 +46,7 @@ export default class Game extends Component<GameProps,GameProps> {
             <div className="tile is-ancestor">
                 <div className="tile is-parent">
                     <article className="tile is-child notification is-info">
-                        
+                        <GameBoard/>
                     </article>
                 </div>
   
