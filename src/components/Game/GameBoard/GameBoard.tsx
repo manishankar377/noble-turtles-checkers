@@ -1,21 +1,21 @@
 
-import React, { Component, CSSProperties } from "react";
+import { Component} from "react";
 import './GameBoard.css';
 import Row from './Row';
-import Cell from './Cell';
 
-
-
+//Game Board Props Interface
 interface GameBoardProps {
+	updateCurrentPlayer : any
 }
-
-interface GameBoardState {
+//Game Board State Interface
+export interface GameBoardState {
     board: any;
     activePlayer: string;
-    aiDepthCutoff: number;
-    count: number;
-    popShown: boolean;
+    continueTurn: boolean;
+	winnerDecission : boolean;
+    // gameState : string;
 }
+
 export default class GameBoard extends Component<GameBoardProps,GameBoardState> {
     public readonly state: GameBoardState = {
         board: [
@@ -24,14 +24,13 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
             ['b','-','b','-','b','-','b','-'],
             ['-','-','-','-','-','-','-','-'],
             ['-','-','-','-','-','-','-','-'],
-            ['-','r','-','r','-','r','-','r'],
-            ['r','-','r','-','r','-','r','-'],
-            ['-','r','-','r','-','r','-','r']
+            ['-','w','-','w','-','w','-','w'],
+            ['w','-','w','-','w','-','w','-'],
+            ['-','w','-','w','-','w','-','w']
         ],
-        activePlayer: 'r',
-        aiDepthCutoff: 3,
-        count: 0,
-        popShown: false
+        activePlayer: 'w',
+        continueTurn : false,
+		winnerDecission : false,
 	};
 
     constructor(props: GameBoardProps) {
@@ -43,10 +42,12 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
 	public render(): JSX.Element {
 		return (
             <div>
-                <div className="notification is-success">
+				{this.state.winnerDecission ? 
+                (<div className="notification is-success">
                 <button className="delete"></button>
-                        Congratulations 🎉 🎉 🎉 🎉!! <strong>player 1 has won!!</strong>
-                </div>
+                        Congratulations 🎉 🎉 🎉 🎉!! <strong>{this.state.activePlayer} has won!!</strong>
+                </div>)
+				:''}
 			    <div className="nt-board-container">
 				    <div className={'board '+this.state.activePlayer}>
 					{
@@ -57,16 +58,15 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
             </div>
 		);
 	}
-	public aboutPopOpen(): void {
-		this.setState({popShown: true});
-	}
-	public aboutPopClose() : void  {
-		this.setState({popShown: false});
-	}
+
+    
 
 	public handlePieceClick(e:any) : void {
 		let rowIndex = parseInt(e.target.attributes['data-row'].nodeValue),
 		    colIndex = parseInt(e.target.attributes['data-col'].nodeValue);
+        
+        // Game State Based Logic to be Implemented
+
 		if (this.state.board[rowIndex][colIndex].indexOf(this.state.activePlayer) > -1) {
 			//this is triggered if the piece that was clicked on is one of the player's own pieces, it activates it and highlights possible moves
 			this.state.board = this.state.board.map(function(row:any){return row.map(function(cell:any){return cell.replace('a', '')});}); //un-activate any previously activated pieces
@@ -79,10 +79,12 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
 			//is the game over? if not, swap active player
 			this.setState(this.state);
 			if (this.winDetection(this.state.board, this.state.activePlayer)) {
-				alert(this.state.activePlayer+ ' won the game!');
+				this.state.winnerDecission = true;
+				// alert(this.state.activePlayer+ ' has won the game!');
 			}
 			else {
-				this.state.activePlayer = (this.state.activePlayer == 'r' ? 'b' : 'r');
+				this.state.activePlayer = (this.state.activePlayer == 'w' ? 'b' : 'w');
+				this.props.updateCurrentPlayer(this.state);
 			}
 		}
 		this.setState(this.state);
@@ -111,7 +113,7 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
 		board = board.map(function(row:any){return row.map(function(cell:any){return cell.replace('h', '-').replace(/d\d\d/g, '').trim()});}); 
 		//place active piece, now unactive, in it's new place
 		board[rowIndex][cellIndex] = activePiece.replace('a', '');;
-		if ( (activePlayer == 'b' && rowIndex == 7) || (activePlayer == 'r' && rowIndex == 0) ) {
+		if ( (activePlayer == 'b' && rowIndex == 7) || (activePlayer == 'w' && rowIndex == 0) ) {
 			board[rowIndex][cellIndex]+= ' k';
 		}		
 		return board;
@@ -122,7 +124,7 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
         // this.state.setState()
 		this.state.board = this.state.board.map(function(row:any){return row.map(function(cell:any){return cell.replace('h', '-').replace(/d\d\d/g, '').trim()});}); 
 
-		let possibleMoves = this.findAllPossibleMoves(rowIndex, cellIndex, this.state.board, this.state.activePlayer);
+		let possibleMoves = this.calculateAllPossibleMoves(rowIndex, cellIndex, this.state.board, this.state.activePlayer);
 
 		//actually highlight the possible moves on the board
 		//the 'highlightTag' inserts the information in to a cell that specifies 
@@ -137,53 +139,49 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
 		this.setState(this.state);
 	}
 
-	public findAllPossibleMoves(rowIndex:any, cellIndex:any, board:any, activePlayer:any) : any{
-		var possibleMoves = [];
-		var directionOfMotion = [];
+	public calculateAllPossibleMoves(rowIndex:any, cellIndex:any, board:any, activePlayer:any) : any{
+		var availableMoves = [];
+		var direction = [];
 		var leftOrRight = [1,-1];
 		var isKing = board[rowIndex][cellIndex].indexOf('k') > -1;
 		if (activePlayer === 'b') {
-			directionOfMotion.push(1);
+			direction.push(1);
 		}
 		else {
-			directionOfMotion.push(-1);
+			direction.push(-1);
 		}
 
-		//if it's a king, we allow it to both go forward and backward, otherwise it can only move in it's color's normal direction
-		//the move loop below runs through every direction of motion allowed, so if there are two it will hit them both
+		// Allow Dual side Moments if the Piece is a king
 		if (isKing) {
-			directionOfMotion.push(directionOfMotion[0]*-1);
+			direction.push(direction[0]*-1);
 		}
 
-		//normal move detection happens here (ie. non jumps)
-		//for each direction of motion allowed to the piece it loops (forward for normal pieces, both for kings)
-		//inside of that loop, it checks in that direction of motion for both left and right (checkers move diagonally)
-		//any moves found are pushed in to the possible moves array
-		for (var j = 0; j < directionOfMotion.length; j++) {
-			for (var i = 0; i < leftOrRight.length; i++) {			
+		// Normal Moves 
+		for (let j = 0; j < direction.length; j++) {
+			for (let i = 0; i < leftOrRight.length; i++) {			
 				if (
-					typeof board[rowIndex+directionOfMotion[j]] !== 'undefined' &&
-					typeof board[rowIndex+directionOfMotion[j]][cellIndex + leftOrRight[i]] !== 'undefined' &&
-					board[rowIndex+directionOfMotion[j]][cellIndex + leftOrRight[i]] == '-'
+					typeof board[rowIndex+direction[j]] !== 'undefined' &&
+					typeof board[rowIndex+direction[j]][cellIndex + leftOrRight[i]] !== 'undefined' &&
+					board[rowIndex+direction[j]][cellIndex + leftOrRight[i]] == '-'
 				){
-					if (possibleMoves.map(function(move){return String(move.targetRow)+String(move.targetCell);}).indexOf(String(rowIndex+directionOfMotion[j])+String(cellIndex+leftOrRight[i])) < 0) {
-						possibleMoves.push({targetRow: rowIndex+directionOfMotion[j], targetCell: cellIndex+leftOrRight[i], wouldDelete:[]});
+					if (availableMoves.map(function(move){return String(move.targetRow)+String(move.targetCell);}).indexOf(String(rowIndex+direction[j])+String(cellIndex+leftOrRight[i])) < 0) {
+						availableMoves.push({targetRow: rowIndex+direction[j], targetCell: cellIndex+leftOrRight[i], wouldDelete:[]});
 					}
 				}
 			}
 		}
 
-		//get jumps
-		var jumps = this.findAllJumps(rowIndex, cellIndex, board, directionOfMotion[0], [], [], isKing, activePlayer);
+		//Get Available Jumps
+		var jumps = this.findAllOptions(rowIndex, cellIndex, board, direction[0], [], [], isKing, activePlayer);
 		
 		//loop and push all jumps in to possibleMoves
 		for (var i = 0; i < jumps.length; i++) {
-			possibleMoves.push(jumps[i]);
+			availableMoves.push(jumps[i]);
 		}
-		return possibleMoves;
+		return availableMoves;
 	}
 
-	public findAllJumps(sourceRowIndex:any, sourceCellIndex:any, board:any, directionOfMotion:any, possibleJumps:any, wouldDelete:any, isKing:any, activePlayer:any) : any{
+	public findAllOptions(sourceRowIndex:any, sourceCellIndex:any, board:any, directionOfMotion:any, possibleJumps:any, wouldDelete:any, isKing:any, activePlayer:any) : any{
 		//jump moves
 		var thisIterationDidSomething = false;
 		var directions = [directionOfMotion];
@@ -203,7 +201,7 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
 					typeof board[sourceRowIndex+directions[k]][sourceCellIndex+leftOrRight[l]] !== 'undefined' &&
 					typeof board[sourceRowIndex+(directions[k]*2)] !== 'undefined' &&
 					typeof board[sourceRowIndex+(directions[k]*2)][sourceCellIndex+(leftOrRight[l]*2)] !== 'undefined' &&
-					board[sourceRowIndex+directions[k]][sourceCellIndex+leftOrRight[l]].indexOf((activePlayer == 'r' ? 'b' : 'r')) > -1 &&
+					board[sourceRowIndex+directions[k]][sourceCellIndex+leftOrRight[l]].indexOf((activePlayer == 'w' ? 'b' : 'w')) > -1 &&
 					board[sourceRowIndex+(directions[k]*2)][sourceCellIndex+(leftOrRight[l]*2)] == '-'
 				){
 					if (possibleJumps.map(function(move:any){return String(move.targetRow)+String(move.targetCell);}).indexOf(String(sourceRowIndex+(directions[k]*2))+String(sourceCellIndex+(leftOrRight[l]*2))) < 0) {
@@ -232,7 +230,7 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
 		if(thisIterationDidSomething) {
 			for (let i = 0; i < possibleJumps.length; i++) {
 				let coords = [possibleJumps[i].targetRow, possibleJumps[i].targetCell],
-				    children = this.findAllJumps(coords[0], coords[1], board, directionOfMotion, possibleJumps, possibleJumps[i].wouldDelete, isKing, activePlayer);
+				    children = this.findAllOptions(coords[0], coords[1], board, directionOfMotion, possibleJumps, possibleJumps[i].wouldDelete, isKing, activePlayer);
 				for (var j = 0; j < children.length; j++) {
 					if (possibleJumps.indexOf(children[j]) < 0) {
 						possibleJumps.push(children[j]);
@@ -244,7 +242,7 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
 	}
 
     public winDetection(board:any, activePlayer:any) : any{
-		var enemyPlayer = (activePlayer == 'r' ? 'b' : 'r');
+		var enemyPlayer = (activePlayer == 'w' ? 'b' : 'w');
 		var result = true;
 		for (var i = 0; i < board.length; i++) {
 			for (var j = 0; j < board[i].length; j++) {
@@ -256,6 +254,11 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
 		return result;
 	}
 
+	/** 
+     * Method name : reset()
+     * Pre-Condtion : this?.state <> null
+     * Post-Condtion : this.state.activePlayer = 'w' && board is reset to default
+     **/
 	public reset() : void {
 		this.setState({
 			board: [
@@ -264,11 +267,11 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
 				['b','-','b','-','b','-','b','-'],
 				['-','-','-','-','-','-','-','-'],
 				['-','-','-','-','-','-','-','-'],
-				['-','r','-','r','-','r','-','r'],
-				['r','-','r','-','r','-','r','-'],
-				['-','r','-','r','-','r','-','r']
-			],
-			activePlayer: 'r'
+				['-','w','-','w','-','w','-','w'],
+				['w','-','w','-','w','-','w','-'],
+				['-','w','-','w','-','w','-','w']
+        	],
+			activePlayer: 'w'
 		});
 	}
 	

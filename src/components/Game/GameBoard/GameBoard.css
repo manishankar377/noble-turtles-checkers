@@ -36,10 +36,10 @@
 	 margin-right: 5px;
 }
  .cell .gamePiece {
-	 width: 40px;
-	 height: 40px;
+	 width: var(--cell-gamepiece-width);
+	 height: var(--cell-gamepiece-height);
 	 margin: 5px 0 0 5px;
-	 border-radius: 40px;
+	 border-radius: var(--cell-gamepiece-border-radius);
 	 cursor: pointer;
 	 position: relative;
 }
@@ -60,18 +60,18 @@
 	 background-color: #444;
 	 border: 1px solid white;
 }
- .cell.cell-r .gamePiece {
+ .cell.cell-w .gamePiece {
 	 background-color: #e26b6b;
 }
- .cell.cell-r.k .gamePiece:after {
+ .cell.cell-w.k .gamePiece:after {
 	 background-color: #e26b6b;
 	 border: 1px solid white;
 }
- .cell.cell-ab .gamePiece, .cell.cell-ar .gamePiece {
+ .cell.cell-ab .gamePiece, .cell.cell-aw .gamePiece {
 	 background-color: #6a6aff;
 	 box-shadow: 0px 0px 24px #2983f3;
 }
- .cell.cell-ab.k .gamePiece:after, .cell.cell-ar.k .gamePiece:after {
+ .cell.cell-ab.k .gamePiece:after, .cell.cell-aw.k .gamePiece:after {
 	 background-color: #6a6aff;
 	 border: 1px solid white;
 }
@@ -81,10 +81,10 @@
  .cell.m .gamePiece {
 	 background-color: green;
 }
- .board.r .cell-b .gamePiece {
+ .board.w .cell-b .gamePiece {
 	 opacity: 0.7;
 }
- .board.b .cell-r .gamePiece {
+ .board.b .cell-w .gamePiece {
 	 opacity: 0.7;
 }
  .board {

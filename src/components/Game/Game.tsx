@@ -1,30 +1,35 @@
-import React, { Component, CSSProperties } from "react";
+import { Component, CSSProperties } from "react";
 import 'bulma/css/bulma.min.css';
-
-import GameBoard from './GameBoard/GameBoard';
+import GameBoard,{GameBoardState} from './GameBoard/GameBoard';
 
 
 interface GameProps {
-  toggleToPlay?: any;
+    toggleToPlay?: boolean;
+    player1 : string,
+    player2: string
 }
 
-interface GameProps {
+interface GameState {
+    currentPlayer : string
 }
 
-
-
-export default class Game extends Component<GameProps,GameProps> {
+export default class Game extends Component<GameProps,GameState> {
 
     constructor(props : GameProps){
         super(props);  
-        console.log(this.props);
+        this.updateCurrentPlayer = this.updateCurrentPlayer.bind(this);
     }
 
-    componentDidMount() {
-    }  
+    //Define State on Home Page
+    public readonly state: GameState = {
+        currentPlayer : this.props.player1
+	}
 
+    public updateCurrentPlayer(gameBoardState : GameBoardState) : void {
+        let currentPlayer = gameBoardState.activePlayer === 'r' ? this.props.player1 : this.props.player2;
+        this.setState({currentPlayer});
+    }
 
-    
 
     public render(): JSX.Element {
 
@@ -35,35 +40,34 @@ export default class Game extends Component<GameProps,GameProps> {
             color: '#D9D9D9'
 
         };
-
-            
-  let boardStyle = {
-      maxWidth: '600px',
-      maxHeight: '600px'
-    }
+        let boardStyle : CSSProperties = {
+            maxWidth: '600px',
+            maxHeight: '600px'
+        }
 
         return (
             <div className="tile is-ancestor">
                 <div className="tile is-parent">
                     <article className="tile is-child box notification is-warning">
-                        <p className="title">Player's Turn</p>
-                        <p className="subtitle">With some content</p>
+                        <p className="title">{this.state.currentPlayer}'s Turn</p>
+                        <p className="subtitle">please click on the Piece to View your options</p>
                         <div className="content">
-                            <p>Turn Please Continue</p>
-                            <div className="buttons">
+                        {/* <!-- Section to Include Timer--> */}
+                            <p></p>
+                        {/* <!-- Section to Include Timer : End--> */}
+                            {/* <div className="buttons">
                                 <button className="button is-primary is-light">Reset</button>
-                            </div>
+                            </div> */}
                         </div>
                     </article>
                 </div>
                 <div className="tile is-parent is-10">
                     <article className="tile is-child notification">
-                        <GameBoard/>
+                        <GameBoard updateCurrentPlayer={this.updateCurrentPlayer}/>
                     </article>
                 </div>
   
             </div>
-
         );
     }
 }
