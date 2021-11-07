@@ -1,6 +1,7 @@
 
 import { Component } from "react";
 import Cell from './Cell';
+import './GameBoard.css';
 
 export interface RowProps {
     rowArr : any,

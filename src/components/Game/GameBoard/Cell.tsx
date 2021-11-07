@@ -19,7 +19,7 @@ export default class Cell extends Component<CellProps,CellState> {
 	public render(): JSX.Element {
 		return(
 			<div  className={'cell cell-'+this.props.cell} >
-				<div onClick={this.props.handlePieceClick} data-row={this.props.rowIndex} data-cell={this.props.index} className="gamePiece"></div>
+				<div onClick={this.props.handlePieceClick} data-row={this.props.rowIndex} data-col={this.props.index} className="gamePiece"></div>
 			</div>
 		)
 	}

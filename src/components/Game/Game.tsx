@@ -45,7 +45,19 @@ export default class Game extends Component<GameProps,GameProps> {
         return (
             <div className="tile is-ancestor">
                 <div className="tile is-parent">
-                    <article className="tile is-child notification is-info">
+                    <article className="tile is-child box notification is-warning">
+                        <p className="title">Player's Turn</p>
+                        <p className="subtitle">With some content</p>
+                        <div className="content">
+                            <p>Turn Please Continue</p>
+                            <div className="buttons">
+                                <button className="button is-primary is-light">Reset</button>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+                <div className="tile is-parent is-10">
+                    <article className="tile is-child notification">
                         <GameBoard/>
                     </article>
                 </div>

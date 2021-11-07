@@ -38,23 +38,26 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
         super(props);
         this.handlePieceClick = this.handlePieceClick.bind(this);
         this.executeMove = this.executeMove.bind(this);
-        this.reset = this.reset.bind(this);
     }
 	public render(): JSX.Element {
+		var rowIndex;
 		return (
-            <div>
-                <div className="notification is-success">
-                <button className="delete"></button>
-                        Congratulations 🎉 🎉 🎉 🎉!! <strong>player 1 has won!!</strong>
-                </div>
-			    <div className="nt-board-container">
-				    <div className={'board '+this.state.activePlayer}>
+			<div className="container">
+				<div className={'board '+this.state.activePlayer}>
 					{
-						this.state.board.map((row:number, index:number) => <Row rowArr={row} handlePieceClick={this.handlePieceClick} rowIndex={index}/>)
+						this.state.board.map((row:number, index:number) => {
+							return (<Row rowArr={row} handlePieceClick={this.handlePieceClick} rowIndex={index}/>)
+						})
 					}
-				    </div>
-			    </div>
-            </div>
+				</div>
+				<div className="clear"></div>
+				<button onClick={this.reset}>Reset</button>
+				<button onClick={this.aboutPopOpen}>About</button>
+				{/* <Statistics board={this.state.board}/>
+				<Popup shown={this.state.popShown} close={this.aboutPopClose} copy="
+					Hey! Thanks for checking out my checkers game. I know that the title says 'React Checkers', but there isn't a ton of React in use here, it's only handling the display (that's its job, huh?). Essentially React displays our board array, and most of the moving and detection are just accessing that array. The AI is built out using a limited version of the minimax algorithm (see http://neverstopbuilding.com/minimax for a nice explanation of what that means), simply it means that the program forecasts futures, assumes you'll play as if you were doing the same, and picks the route that it thinks will result in the best for itself if you also play 'perfeclty', and I use that word loosely because this AI currently only looks 3 turns in to the future. It uses a point system to determine 'good' and 'bad' stuff that could happen, for example, if it can win in the next 3 turns, thats a 100 point outcome. If it will lose in the next 3 turns, thats worth -100 points, losing a king or killing an enemy king are worth -25 or 25 points respectively, and killing/losing regular pieces are worth +-10 points. Lastly, classifies making a new king of it's own as worth 15 points, so slightly better than killing 1 opponent. The bot looks through something like 1000-1500 possible futures before each move.
+				"/> */}
+			</div>
 		);
 	}
 	public aboutPopOpen(): void {
@@ -65,24 +68,28 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
 	}
 
 	public handlePieceClick(e:any) : void {
-		let rowIndex = parseInt(e.target.attributes['data-row'].nodeValue),
-		    colIndex = parseInt(e.target.attributes['data-col'].nodeValue);
-		if (this.state.board[rowIndex][colIndex].indexOf(this.state.activePlayer) > -1) {
+		var rowIndex = parseInt(e.target.attributes['data-row'].nodeValue);
+		var cellIndex = parseInt(e.target.attributes['data-cell'].nodeValue);
+		if (this.state.board[rowIndex][cellIndex].indexOf(this.state.activePlayer) > -1) {
 			//this is triggered if the piece that was clicked on is one of the player's own pieces, it activates it and highlights possible moves
 			this.state.board = this.state.board.map(function(row:any){return row.map(function(cell:any){return cell.replace('a', '')});}); //un-activate any previously activated pieces
-			this.state.board[rowIndex][colIndex] = 'a'+this.state.board[rowIndex][colIndex];
-			this.highlightPossibleMoves(rowIndex, colIndex);
+			this.state.board[rowIndex][cellIndex] = 'a'+this.state.board[rowIndex][cellIndex];
+			this.highlightPossibleMoves(rowIndex, cellIndex);
 		}
-		else if(this.state.board[rowIndex][colIndex].indexOf('h') > -1) {
+		else if(this.state.board[rowIndex][cellIndex].indexOf('h') > -1) {
 			//this is activated if the piece clicked is a highlighted square, it moves the active piece to that spot.
-			this.state.board = this.executeMove(rowIndex, colIndex, this.state.board, this.state.activePlayer);
+			this.state.board = this.executeMove(rowIndex, cellIndex, this.state.board, this.state.activePlayer);
 			//is the game over? if not, swap active player
 			this.setState(this.state);
 			if (this.winDetection(this.state.board, this.state.activePlayer)) {
-				alert(this.state.activePlayer+ ' won the game!');
+				console.log(this.state.activePlayer+ ' won the game!');
 			}
 			else {
 				this.state.activePlayer = (this.state.activePlayer == 'r' ? 'b' : 'r');
+                // Min-Max Logic in Progress
+				// if (this.state.activePlayer == 'b') {
+				// 	setTimeout(() => this.ai(), 50);
+				// }
 			}
 		}
 		this.setState(this.state);
@@ -122,7 +129,7 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
         // this.state.setState()
 		this.state.board = this.state.board.map(function(row:any){return row.map(function(cell:any){return cell.replace('h', '-').replace(/d\d\d/g, '').trim()});}); 
 
-		let possibleMoves = this.findAllPossibleMoves(rowIndex, cellIndex, this.state.board, this.state.activePlayer);
+		var possibleMoves = this.findAllPossibleMoves(rowIndex, cellIndex, this.state.board, this.state.activePlayer);
 
 		//actually highlight the possible moves on the board
 		//the 'highlightTag' inserts the information in to a cell that specifies 
@@ -142,7 +149,7 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
 		var directionOfMotion = [];
 		var leftOrRight = [1,-1];
 		var isKing = board[rowIndex][cellIndex].indexOf('k') > -1;
-		if (activePlayer === 'b') {
+		if (activePlayer == 'b') {
 			directionOfMotion.push(1);
 		}
 		else {
@@ -230,9 +237,9 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
 		
 		//if a jump was found, thisIterationDidSomething is set to true and this function calls itself again from that source point, this is how we recurse to find multi jumps
 		if(thisIterationDidSomething) {
-			for (let i = 0; i < possibleJumps.length; i++) {
-				let coords = [possibleJumps[i].targetRow, possibleJumps[i].targetCell],
-				    children = this.findAllJumps(coords[0], coords[1], board, directionOfMotion, possibleJumps, possibleJumps[i].wouldDelete, isKing, activePlayer);
+			for (var i = 0; i < possibleJumps.length; i++) {
+				var coords = [possibleJumps[i].targetRow, possibleJumps[i].targetCell];
+				var children = this.findAllJumps(coords[0], coords[1], board, directionOfMotion, possibleJumps, possibleJumps[i].wouldDelete, isKing, activePlayer);
 				for (var j = 0; j < children.length; j++) {
 					if (possibleJumps.indexOf(children[j]) < 0) {
 						possibleJumps.push(children[j]);
@@ -241,19 +248,6 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
 			}
 		}
 		return possibleJumps;
-	}
-
-    public winDetection(board:any, activePlayer:any) : any{
-		var enemyPlayer = (activePlayer == 'r' ? 'b' : 'r');
-		var result = true;
-		for (var i = 0; i < board.length; i++) {
-			for (var j = 0; j < board[i].length; j++) {
-				if (board[i][j].indexOf(enemyPlayer) > -1) {
-					result = false;
-				}
-			}
-		}
-		return result;
 	}
 
 	public reset() : void {
@@ -271,10 +265,178 @@ export default class GameBoard extends Component<GameBoardProps,GameBoardState> 
 			activePlayer: 'r'
 		});
 	}
-	
+	public winDetection(board:any, activePlayer:any) : any{
+		var enemyPlayer = (activePlayer == 'r' ? 'b' : 'r');
+		var result = true;
+		for (var i = 0; i < board.length; i++) {
+			for (var j = 0; j < board[i].length; j++) {
+				if (board[i][j].indexOf(enemyPlayer) > -1) {
+					result = false;
+				}
+			}
+		}
+		return result;
+	}
 	cloneBoard(board:any) : any{
         var output = [];
         for (var i = 0; i < board.length; i++) output.push(board[i].slice(0));
         return output;
     }
+	public ai() : any {
+		//prep a branching future prediction
+		this.state.count = 0;
+		console.time('decisionTree');
+		var decisionTree = this.aiBranch(this.state.board, this.state.activePlayer, 1);
+		console.timeEnd('decisionTree');
+		console.log(this.state.count);
+		//execute the most favorable move
+		if (decisionTree.length > 0) {
+			console.log(decisionTree[0]);
+			setTimeout(() => {
+				this.handlePieceClick({
+					target:{
+						attributes:{
+							'data-row':{
+								nodeValue:decisionTree[0].piece.targetRow
+							},
+							'data-cell':{
+								nodeValue:decisionTree[0].piece.targetCell
+							}
+						}
+					}
+				});
+
+				setTimeout(() => {
+					this.handlePieceClick({
+						target:{
+							attributes:{
+								'data-row':{
+									nodeValue:decisionTree[0].move.targetRow
+								},
+								'data-cell':{
+									nodeValue:decisionTree[0].move.targetCell
+								}
+							}
+						}
+					});
+				}, 1000);
+			}, 750);
+		}
+		else {
+			alert('no moves, you win!');
+		}
+	}
+
+	public aiBranch(hypotheticalBoard:any, activePlayer:any, depth:any) : any{
+		this.state.count++;
+		let output = [];
+		for (let i = 0; i < hypotheticalBoard.length; i++) {
+			for (let j = 0; j < hypotheticalBoard[i].length; j++) {
+				if (hypotheticalBoard[i][j].indexOf(activePlayer) > -1) {
+					var possibleMoves = this.findAllPossibleMoves(i, j, hypotheticalBoard, activePlayer);
+					for (let k = 0; k < possibleMoves.length; k++) {
+						let tempBoard = this.cloneBoard(hypotheticalBoard);
+                    	tempBoard[i][j] = 'a'+tempBoard[i][j];
+
+						let buildHighlightTag = 'h ';
+						for (let m = 0; m < possibleMoves[k].wouldDelete.length; m++) {
+							buildHighlightTag += 'd'+String(possibleMoves[k].wouldDelete[m].targetRow) + String(possibleMoves[k].wouldDelete[m].targetCell)+' ';
+						}
+						tempBoard[possibleMoves[k].targetRow][possibleMoves[k].targetCell] = buildHighlightTag;
+
+						let buildingObject = {
+							piece: {targetRow: i, targetCell: j},
+							move:possibleMoves[k],
+							board:this.executeMove(possibleMoves[k].targetRow, possibleMoves[k].targetCell, tempBoard, activePlayer),
+							terminal: null,
+							children:[],
+							score:0,
+							activePlayer: activePlayer,
+							depth: depth,
+						}
+						//does that move win the game?
+						buildingObject.terminal = this.winDetection(buildingObject.board, activePlayer);						
+
+						if (buildingObject.terminal) {
+							//console.log('a terminal move was found');
+							//if terminal, score is easy, just depends on who won
+							if (activePlayer == this.state.activePlayer) {
+								buildingObject.score = 100-depth;
+							}
+							else {
+								buildingObject.score = -100-depth;
+							}
+						}
+						else if(depth > this.state.aiDepthCutoff) {
+							//don't want to blow up the call stack boiiiiii
+							buildingObject.score = 0;
+						}
+						else {	
+							buildingObject.children = this.aiBranch(buildingObject.board, (activePlayer == 'r' ? 'b' : 'r'), depth+1);
+							//if not terminal, we want the best score from this route (or worst depending on who won)							
+							var scoreHolder :Array<number> = [];
+
+					        for (var l = 0; l < buildingObject.children.length; l++) {
+					        	if (typeof buildingObject.children[l]['score'] !== 'undefined'){
+					        		scoreHolder.push(buildingObject.children[l]['score']);
+					        	}
+					        }
+
+					        scoreHolder.sort(function(a,b){ if (a > b) return -1; if (a < b) return 1; return 0; });
+
+					        if (scoreHolder.length > 0) {
+						        if (activePlayer == this.state.activePlayer) {
+									buildingObject.score = scoreHolder[scoreHolder.length-1];
+								}
+								else {
+									buildingObject.score = scoreHolder[0];
+								}
+							}
+							else {
+								if (activePlayer == this.state.activePlayer) {
+									buildingObject.score = 100-depth;
+								}
+								else {
+									buildingObject.score = -100-depth;
+								}
+							}
+						}
+						if (activePlayer == this.state.activePlayer) {
+							for (var n = 0; n < buildingObject.move.wouldDelete.length; n++) {
+								if (hypotheticalBoard[buildingObject.move.wouldDelete[n].targetRow][buildingObject.move.wouldDelete[n].targetCell].indexOf('k') > -1) {
+									buildingObject.score+=(25-depth);
+								}
+								else {
+									buildingObject.score+=(10-depth);
+								}
+							}
+							if ((JSON.stringify(hypotheticalBoard).match(/k/g) || []).length < (JSON.stringify(buildingObject.board).match(/k/g) || []).length) {
+								//new king made after this move
+								buildingObject.score+=(15-depth);
+							}
+						}
+						else {
+							for (var n = 0; n < buildingObject.move.wouldDelete.length; n++) {
+								if (hypotheticalBoard[buildingObject.move.wouldDelete[n].targetRow][buildingObject.move.wouldDelete[n].targetCell].indexOf('k') > -1) {
+									buildingObject.score-=(25-depth);
+								}
+								else {
+									buildingObject.score-=(10-depth);
+								}
+							}							
+							if ((JSON.stringify(hypotheticalBoard).match(/k/g) || []).length < (JSON.stringify(buildingObject.board).match(/k/g) || []).length) {
+								//new king made after this move
+								buildingObject.score-=(15-depth);
+							}
+						}
+						buildingObject.score+=buildingObject.move.wouldDelete.length;
+						output.push(buildingObject);
+					}
+				}
+			}
+		}
+		
+		output = output.sort(function(a,b){ if (a.score > b.score) return -1; if (a.score < b.score) return 1; return 0; });
+		return output;
+	}
 }
